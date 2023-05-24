@@ -1,0 +1,15 @@
+CmpntHtmlBackGround As CanvasComponent:
+    Fill: =RGBA(0, 0, 0, 0)
+    Height: =640
+    Width: =640
+    X: =0
+    Y: =0
+    ZIndex: =1
+
+    HtmlText1 As htmlViewer:
+        Height: =Parent.Height
+        HtmlText: |-
+            ="<div style='margin-left:10px;width:" & Parent.Width - 25 & "px;height:" & Parent.Height - 20 & "px;background-color:white;box-shadow:0px 5px 6px 5px  #ccc; border-radius:10px';></div>"
+        Width: =Parent.Width
+        ZIndex: =1
+

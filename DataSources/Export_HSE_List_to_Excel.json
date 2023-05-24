@@ -1,0 +1,9 @@
+[
+  {
+    "AddinConnectorId": "9f7eae0b-92ab-4e8b-a0d0-1eb0ab259f59",
+    "AddinId": "6d1f157d-95bf-406d-b65d-cfd3240f724e",
+    "Name": "Export_HSE_List_to_Excel",
+    "ServiceKind": "AddinWadl",
+    "Type": "ServiceInfo"
+  }
+]

@@ -1,0 +1,21 @@
+CmpntLoading As CanvasComponent:
+    Fill: =RGBA(0, 0, 0, 0)
+    Height: =640
+    Width: =640
+    X: =0
+    Y: =0
+    ZIndex: =1
+
+    Rectangle4 As rectangle:
+        BorderColor: =RGBA(0, 0, 0, 0)
+        Fill: =RGBA(230, 230, 230, .2)
+        Height: =Parent.Height
+        Width: =Parent.Width
+        ZIndex: =1
+
+    Image1 As image:
+        Image: ='Spin-1s-200px'
+        X: =Parent.Width * 0.5 - Self.Width*0.5
+        Y: =Parent.Height * 0.5 - Self.Height*0.5
+        ZIndex: =2
+

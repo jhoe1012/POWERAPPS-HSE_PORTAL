@@ -1,0 +1,9 @@
+[
+  {
+    "AddinConnectorId": "43c5b300-53f0-4265-9088-fea97886e85e",
+    "AddinId": "6d1f157d-95bf-406d-b65d-cfd3240f724e",
+    "Name": "MoveDocumenttoarchivev2",
+    "ServiceKind": "AddinWadl",
+    "Type": "ServiceInfo"
+  }
+]

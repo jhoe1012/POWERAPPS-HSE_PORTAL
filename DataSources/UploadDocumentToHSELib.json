@@ -1,0 +1,9 @@
+[
+  {
+    "AddinConnectorId": "27049a46-999d-4de0-96fd-1f19f044db8a",
+    "AddinId": "6d1f157d-95bf-406d-b65d-cfd3240f724e",
+    "Name": "UploadDocumentToHSELib",
+    "ServiceKind": "AddinWadl",
+    "Type": "ServiceInfo"
+  }
+]

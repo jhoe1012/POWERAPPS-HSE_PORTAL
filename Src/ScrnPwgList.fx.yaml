@@ -1,0 +1,6 @@
+ScrnPwgList As screen:
+
+    CmpntHeader_4 As CmpntHeader:
+        HeaderText: ="Pandemic Workplace Guidelines"
+        Width: =Parent.Width
+

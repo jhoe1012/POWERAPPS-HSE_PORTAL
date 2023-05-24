@@ -1,0 +1,1443 @@
+"ScrnV2AddDoc As screen.'phoneLayout_FluidGridWithHeaderPageLayout_ver3.0'":
+    OnVisible: |-
+        =Clear(colAttachmentDocument);UpdateContext({lclShowLoading: false});
+
+    Canvas1 As fluidGrid.fluidGridWithBlankCard:
+        BorderThickness: =0
+        Height: =Parent.Height - Self.Y
+        Width: =Parent.Width
+        Y: =CmpntHeader_2.Y + CmpntHeader_2.Height
+        ZIndex: =3
+
+        DataCard1 As dataCard:
+            BorderColor: =RGBA(0, 0, 0, 1)
+            BorderStyle: =BorderStyle.Solid
+            BorderThickness: =0
+            DisplayMode: =DisplayMode.Edit
+            Fill: =RGBA(0, 0, 0, 0)
+            Height: =702
+            Width: =Parent.Width
+            X: =0
+            Y: =0
+            ZIndex: =1
+
+            FrmAddDoc As form:
+                AcceptsFocus: =false
+                DataSource: =HSE
+                DefaultMode: =FormMode.New
+                Height: =696
+                Item: =gblHSEDoc
+                NumberOfColumns: =2
+                OnFailure: |-
+                    =UpdateContext({lclShowLoading: false});
+                OnSuccess: |
+                    =If(
+                        CountRows(colAttachmentDocument) > 0,
+                        If(
+                            lclEditPressed,
+                            DeleteFileFromsharepoint.Run(gblHSEDoc.SharepointFileID)
+                        );
+                        UpdateContext(
+                            {
+                                lclTS: Text(
+                                    Now(),
+                                    "[$-en-US]mmddyyyy_hhmmss_"
+                                )
+                            }
+                        );
+                        UpdateContext(
+                            {
+                                lclPowAutResp: UploadDocumentToHSELibv2.Run(
+                                    {
+                                        name: lclTS & First(colAttachmentDocument).Name,
+                                        contentBytes: First(colAttachmentDocument).Value
+                                    },
+                                    "/" & FrmAddDoc.LastSubmit.plant & "/"
+                                )
+                            }
+                        );
+                        Patch(
+                            HSE,
+                            FrmAddDoc.LastSubmit,
+                            {
+                                SharepointFileID: lclPowAutResp.spid,
+                                SharepointLink: lclPowAutResp.splink
+                            }
+                        )
+                    );
+                    If(
+                        lclEditPressed,
+                        Notify(
+                            "Document Updated Succesfully.",
+                            NotificationType.Success
+                        ),
+                        Notify(
+                            "Document Added Succesfully.",
+                            NotificationType.Success
+                        )
+                    );
+                    
+                    UpdateContext({lclShowLoading: false});
+                    Navigate(
+                        ScrnV2View,
+                        ScreenTransition.Fade
+                    );
+                X: =Parent.Width*0.5-Self.Width*0.5
+                ZIndex: =1
+
+                NotifyPersons_DataCard5 As typedDataCard.allowedValuesStringEditCard:
+                    AllowedValues: =DataSourceInfo([@HSE], DataSourceInfo.AllowedValues, "NotifyPersons")
+                    BorderColor: =gblPCard.BorderColor
+                    BorderStyle: =gblPCard.BorderStyle
+                    BorderThickness: =gblPCard.BorderThickness
+                    DataField: ="NotifyPersons"
+                    Default: =ThisItem.NotifyPersons
+                    DisplayMode: =Parent.DisplayMode
+                    DisplayName: ="People to Notify"
+                    Fill: =RGBA(0, 0, 0, 0)
+                    Height: =gblPCard.Height
+                    Required: =false
+                    Update: =Concat(DataCardValue51.SelectedItems,Title,",")
+                    Width: =400
+                    X: =1
+                    Y: =1
+                    ZIndex: =1
+
+                    DataCardKey56 As label:
+                        AutoHeight: =true
+                        BorderColor: =gblPLabel.BorderColor
+                        BorderStyle: =gblPLabel.BorderStyle
+                        BorderThickness: =gblPLabel.BorderThickness
+                        Color: =gblPLabel.Color
+                        Fill: =gblPLabel.Fill
+                        Font: =gblPLabel.Font
+                        FontWeight: =gblPLabel.FontWeight
+                        Height: =gblPLabel.Height
+                        Size: =gblPLabel.Size
+                        Text: =Parent.DisplayName
+                        Width: =Parent.Width - 60
+                        Wrap: =false
+                        X: =gblPLabel.X
+                        Y: =gblPLabel.Y
+                        ZIndex: =1
+
+                    ErrorMessage57 As label:
+                        AutoHeight: =true
+                        Height: =10
+                        Live: =Live.Assertive
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Text: =Parent.Error
+                        Visible: =Parent.DisplayMode=DisplayMode.Edit
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardValue51.Y + DataCardValue51.Height
+                        ZIndex: =3
+
+                    StarVisible56 As label:
+                        Align: =Align.Center
+                        Height: =DataCardKey56.Height
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Wrap: =false
+                        Y: =DataCardKey56.Y
+                        ZIndex: =4
+
+                    DataCardValue51 As combobox:
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        BorderStyle: =gblPInput.BorderStyle
+                        BorderThickness: =gblPInput.BorderThickness
+                        ChevronBackground: =gblPInput.ChevronBackground
+                        ChevronFill: =gblPInput.ChevronFill
+                        ChevronHoverBackground: =gblPInput.ChevronHoverBackground
+                        ChevronHoverFill: =gblPInput.ChevronHoverFill
+                        Color: =gblPInput.Color
+                        DefaultSelectedItems: |-
+                            =If(
+                                FrmAddDoc.Mode <> FormMode.New,
+                                Filter(
+                                    HSE_Emails,
+                                    Title in (ForAll(Split(
+                                        Parent.Default,
+                                        ","
+                                    ), {Result: ThisRecord.Value}))
+                                ),
+                                If(
+                                    DataCardValue46.Selected.Group = "Store",
+                                    Filter(
+                                        HSE_Emails,
+                                        isNotify = 1 || Plant = DataCardValue46.Selected.Title || (Hse_Area = DataCardValue46.Selected.Hse_Area && isNotify = 2)
+                                    ),
+                                    Filter(
+                                        HSE_Emails,
+                                        isNotify = 1 || (Plant = DataCardValue46.Selected.Title && isNotify = 3) || (avp_plant = DataCardValue46.Selected.avp_plant && isNotify = 4)
+                                    )
+                                )
+                            )
+                        DisplayFields: =["Title"]
+                        Fill: =gblPInput.Fill
+                        FocusedBorderThickness: =gblPInput.FocusedBorderThickness
+                        Font: =gblPInput.Font
+                        FontWeight: =gblPInput.Font
+                        Height: =gblPInput.Height
+                        HoverBorderColor: =gblPInput.HoverBorderColor
+                        HoverColor: =gblPInput.HoverColor
+                        HoverFill: =gblPInput.HoverFill
+                        InputTextPlaceholder: ="Search People"
+                        IsSearchable: =false
+                        Items: |-
+                            =SortByColumns(
+                                If(
+                                    DataCardValue46.Selected.Group = "Store",
+                                    Filter(
+                                        HSE_Emails,
+                                        Grouping = "Store" || Grouping = "Admin" 
+                                    ),
+                                    Filter(
+                                        HSE_Emails,
+                                        Grouping = "Manufacturing" || Grouping = "Admin"
+                                    )
+                                ),
+                                "Title",
+                                SortOrder.Ascending
+                            )
+                        PressedBorderColor: =gblPInput.PressedBorderColor
+                        PressedColor: =gblPInput.PressedColor
+                        PressedFill: =gblPInput.PressedFill
+                        SearchFields: =["Title"]
+                        SearchItems: =[]
+                        SelectionTagColor: =gblPInput.SelectionTagColor
+                        SelectionTagFill: =gblPInput.SelectionTagFill
+                        Size: =gblPInput.Size
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardKey56.Y+DataCardKey56.Height+5
+                        ZIndex: =5
+
+                Group_DataCard1 As typedDataCard.textualEditCard:
+                    BorderColor: =gblPCard.BorderColor
+                    BorderStyle: =gblPCard.BorderStyle
+                    BorderThickness: =gblPCard.BorderThickness
+                    DataField: ="Group"
+                    Default: =ThisItem.Group
+                    DisplayMode: =Parent.DisplayMode
+                    DisplayName: ="Share to All"
+                    Fill: =RGBA(0, 0, 0, 0)
+                    Height: =gblPCard.Height
+                    MaxLength: =DataSourceInfo([@HSE], DataSourceInfo.MaxLength, "Group")
+                    Required: =false
+                    Update: =DataCardValue4.Selected.Value
+                    Visible: =true
+                    Width: =400
+                    X: =0
+                    Y: =4
+                    ZIndex: =1
+
+                    ErrorMessage22 As label:
+                        AutoHeight: =true
+                        Height: =10
+                        Live: =Live.Assertive
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Text: =Parent.Error
+                        Visible: =Parent.DisplayMode=DisplayMode.Edit
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardValue4.Y + DataCardValue4.Height
+                        ZIndex: =3
+
+                    StarVisible17 As label:
+                        Align: =Align.Center
+                        Height: =DataCardKey1.Height
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Wrap: =false
+                        Y: =DataCardKey1.Y
+                        ZIndex: =4
+
+                    DataCardValue4 As combobox:
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        BorderStyle: =gblPInput.BorderStyle
+                        BorderThickness: =gblPInput.BorderThickness
+                        ChevronBackground: =gblPInput.ChevronBackground
+                        ChevronFill: =gblPInput.ChevronFill
+                        ChevronHoverBackground: =gblPInput.ChevronHoverBackground
+                        ChevronHoverFill: =gblPInput.ChevronHoverFill
+                        Color: =gblPInput.Color
+                        DefaultSelectedItems: |-
+                            =If(
+                                FrmAddDoc.Mode <> FormMode.New, Table({Value:Parent.Default})
+                               
+                            )
+                        DisplayFields: =["Value"]
+                        Fill: =gblPInput.Fill
+                        FocusedBorderThickness: =gblPInput.FocusedBorderThickness
+                        Font: =gblPInput.Font
+                        FontWeight: =gblPInput.Font
+                        Height: =gblPInput.Height
+                        HoverBorderColor: =gblPInput.HoverBorderColor
+                        HoverColor: =gblPInput.HoverColor
+                        HoverFill: =gblPInput.HoverFill
+                        InputTextPlaceholder: ="Search Person"
+                        IsSearchable: =false
+                        Items: =["Manufacturing","Store"]
+                        PressedBorderColor: =gblPInput.PressedBorderColor
+                        PressedColor: =gblPInput.PressedColor
+                        PressedFill: =gblPInput.PressedFill
+                        SearchFields: =["Value"]
+                        SearchItems: =[]
+                        SelectionTagColor: =gblPInput.SelectionTagColor
+                        SelectionTagFill: =gblPInput.SelectionTagFill
+                        SelectMultiple: =false
+                        Size: =gblPInput.Size
+                        Width: =Parent.Width - 60
+                        X: |
+                            =30
+                        Y: =DataCardKey45.Y+DataCardKey45.Height+5
+                        ZIndex: =5
+
+                    DataCardKey1 As label:
+                        AutoHeight: =true
+                        BorderColor: =gblPLabel.BorderColor
+                        BorderStyle: =gblPLabel.BorderStyle
+                        BorderThickness: =gblPLabel.BorderThickness
+                        Color: =gblPLabel.Color
+                        Fill: =gblPLabel.Fill
+                        Font: =gblPLabel.Font
+                        FontWeight: =FontWeight.Bold
+                        Height: =gblPLabel.Height
+                        Size: =gblPLabel.Size
+                        Text: =Parent.DisplayName
+                        Width: =Parent.Width - 60
+                        Wrap: =false
+                        X: =gblPLabel.X
+                        Y: |
+                            =10
+                        ZIndex: =6
+
+                DataCard3 As typedDataCard.blankCard:
+                    BorderStyle: =BorderStyle.Solid
+                    DisplayMode: =DisplayMode.Edit
+                    Fill: =RGBA(0, 0, 0, 0)
+                    Height: =97
+                    Width: =Parent.Width
+                    X: =0
+                    Y: =5
+                    ZIndex: =1
+
+                    AttachmentDocument As attachments:
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        BorderStyle: =BorderStyle.None
+                        DisplayMode: =Parent.DisplayMode
+                        Height: =132
+                        IsInDataCard: =true
+                        Items: =Blank()
+                        MaxAttachments: =1
+                        MaxAttachmentSize: =100
+                        OnAddFile: =ClearCollect(colAttachmentDocument, Self.Attachments)
+                        OnRemoveFile: =ClearCollect(colAttachmentDocument, Self.Attachments)
+                        PaddingBottom: =5
+                        PaddingLeft: =If(Self.DisplayMode = DisplayMode.Edit, 5, 0)
+                        PaddingRight: =5
+                        PaddingTop: =5
+                        Tooltip: =Parent.DisplayName
+                        Width: =Parent.Width - 60
+                        X: =30
+                        ZIndex: =1
+
+                DataCard2 As typedDataCard.blankCard:
+                    BorderColor: =gblPCard.BorderColor
+                    BorderStyle: =gblPCard.BorderStyle
+                    BorderThickness: =gblPCard.BorderThickness
+                    DisplayMode: =DisplayMode.Edit
+                    Fill: =RGBA(0, 0, 0, 0)
+                    Height: =gblPCard.Height
+                    Width: =800
+                    X: =0
+                    Y: =6
+                    ZIndex: =1
+
+                    BtnV2Save As button:
+                        BorderColor: =gblPButtonApprove.BorderColor
+                        BorderStyle: =gblPButtonApprove.BorderStyle
+                        BorderThickness: =gblPButtonApprove.BorderThickness
+                        Color: =gblPButtonApprove.Color
+                        Fill: =gblPButtonApprove.Fill
+                        FocusedBorderColor: =gblPButtonApprove.FocusedBorderColor
+                        FocusedBorderThickness: =gblPButtonApprove.FocusedBorderThickness
+                        Font: =gblPButtonApprove.Font
+                        FontWeight: =gblPButtonApprove.FontWeight
+                        Height: =gblPButtonApprove.Height
+                        HoverBorderColor: =gblPButtonApprove.HoverBorderColor
+                        HoverColor: =gblPButtonApprove.HoverColor
+                        HoverFill: =gblPButtonApprove.HoverFill
+                        OnSelect: |
+                            =UpdateContext({lclShowLoading: true});
+                            SubmitForm(FrmAddDoc);
+                        PressedBorderColor: =gblPButtonApprove.PressedBorderColor
+                        PressedColor: =gblPButtonApprove.PressedColor
+                        PressedFill: =gblPButtonApprove.PressedFill
+                        RadiusBottomLeft: =gblPButtonApprove.RadiusBottomLeft
+                        RadiusBottomRight: =gblPButtonApprove.RadiusBottomRight
+                        RadiusTopLeft: =gblPButtonApprove.RadiusTopLeft
+                        RadiusTopRight: =gblPButtonApprove.RadiusTopRight
+                        Size: =gblPButtonReject.Size
+                        Text: ="Save"
+                        Width: =gblPButtonApprove.Width
+                        X: =Parent.Width*0.35-Self.Width*0.3
+                        Y: |
+                            =Parent.Height*0.5-Self.Height*0.5
+                        ZIndex: =1
+
+                    BtnV2Cancel As button:
+                        BorderColor: =gblPButtonReject.BorderColor
+                        BorderStyle: =gblPButtonReject.BorderStyle
+                        BorderThickness: =gblPButtonReject.BorderThickness
+                        Color: =gblPButtonReject.Color
+                        Fill: =gblPButtonReject.Fill
+                        FocusedBorderColor: =gblPButtonReject.FocusedBorderColor
+                        FocusedBorderThickness: =gblPButtonReject.FocusedBorderThickness
+                        Font: =gblPButtonReject.Font
+                        FontWeight: =gblPButtonReject.FontWeight
+                        Height: =gblPButtonReject.Height
+                        HoverBorderColor: =gblPButtonReject.HoverBorderColor
+                        HoverColor: =gblPButtonReject.HoverColor
+                        HoverFill: =gblPButtonReject.HoverFill
+                        OnSelect: =Navigate(ScrnV2View,ScreenTransition.Fade)
+                        PressedBorderColor: =gblPButtonReject.PressedBorderColor
+                        PressedColor: =gblPButtonReject.PressedColor
+                        PressedFill: =gblPButtonReject.PressedFill
+                        RadiusBottomLeft: =gblPButtonReject.RadiusBottomLeft
+                        RadiusBottomRight: =gblPButtonReject.RadiusBottomRight
+                        RadiusTopLeft: =gblPButtonReject.RadiusTopLeft
+                        RadiusTopRight: =gblPButtonReject.RadiusTopRight
+                        Size: =gblPButtonReject.Size
+                        Text: ="Cancel"
+                        Width: =gblPButtonReject.Width
+                        X: =BtnV2Save.X+BtnV2Save.Width+10
+                        Y: |
+                            =Parent.Height*0.5-Self.Height*0.5
+                        ZIndex: =2
+
+                Title_DataCard4 As typedDataCard.textualEditCard:
+                    BorderColor: =gblPCard.BorderColor
+                    BorderStyle: =gblPCard.BorderStyle
+                    BorderThickness: =gblPCard.BorderThickness
+                    DataField: ="Title"
+                    Default: =ThisItem.Title
+                    DisplayMode: =Parent.DisplayMode
+                    DisplayName: ="Document Name"
+                    Fill: =RGBA(0, 0, 0, 0)
+                    Height: =gblPCard.Height
+                    MaxLength: =DataSourceInfo([@HSE], DataSourceInfo.MaxLength, "Title")
+                    Required: =true
+                    Update: =DataCardValue35.Text
+                    Width: =400
+                    X: =0
+                    Y: =0
+                    ZIndex: =2
+
+                    DataCardKey40 As label:
+                        AutoHeight: =true
+                        BorderColor: =gblPLabel.BorderColor
+                        BorderStyle: =gblPLabel.BorderStyle
+                        BorderThickness: =gblPLabel.BorderThickness
+                        Color: =gblPLabel.Color
+                        Fill: =gblPLabel.Fill
+                        Font: =gblPLabel.Font
+                        FontWeight: =FontWeight.Bold
+                        Height: =gblPLabel.Height
+                        Size: =gblPLabel.Size
+                        Text: =Parent.DisplayName
+                        Width: =Parent.Width - 60
+                        Wrap: =false
+                        X: =gblPLabel.X
+                        Y: =10
+                        ZIndex: =1
+
+                    DataCardValue35 As text:
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        BorderStyle: =gblPInput.BorderStyle
+                        BorderThickness: =gblPInput.BorderThickness
+                        Color: =gblPInput.Color
+                        Default: =Parent.Default
+                        DelayOutput: =true
+                        DisplayMode: =Parent.DisplayMode
+                        Fill: =gblPInput.Fill
+                        FocusedBorderThickness: =gblPInput.FocusedBorderThickness
+                        Font: =gblPInput.Font
+                        FontWeight: =gblPInput.FontWeight
+                        Height: =gblPInput.Height
+                        HoverBorderColor: =gblPInput.HoverBorderColor
+                        HoverColor: =gblPInput.HoverColor
+                        HoverFill: =gblPInput.HoverFill
+                        MaxLength: =Parent.MaxLength
+                        PaddingLeft: =5
+                        PressedBorderColor: =gblPInput.PressedBorderColor
+                        PressedColor: =gblPInput.PressedColor
+                        PressedFill: =gblPInput.PressedFill
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Size: =gblPInput.Size
+                        Tooltip: =Parent.DisplayName
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardKey40.Y + DataCardKey40.Height + 5
+                        ZIndex: =2
+
+                    ErrorMessage41 As label:
+                        AutoHeight: =true
+                        Height: =10
+                        Live: =Live.Assertive
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =9
+                        Text: =Parent.Error 
+                        Visible: =Parent.DisplayMode=DisplayMode.Edit
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardValue35.Y + DataCardValue35.Height
+                        ZIndex: =3
+
+                    StarVisible40 As label:
+                        Align: =Align.Center
+                        Height: =DataCardKey40.Height
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Wrap: =false
+                        Y: =DataCardKey40.Y
+                        ZIndex: =4
+
+                ReferenceNumber_DataCard4 As typedDataCard.textualEditCard:
+                    BorderColor: =gblPCard.BorderColor
+                    BorderStyle: =gblPCard.BorderStyle
+                    BorderThickness: =gblPCard.BorderThickness
+                    DataField: ="ReferenceNumber"
+                    Default: =ThisItem.ReferenceNumber
+                    DisplayMode: =Parent.DisplayMode
+                    DisplayName: ="Reference Number"
+                    Fill: =RGBA(0, 0, 0, 0)
+                    Height: =gblPCard.Height
+                    MaxLength: =DataSourceInfo([@HSE], DataSourceInfo.MaxLength, "ReferenceNumber")
+                    Required: =false
+                    Update: =DataCardValue36.Text
+                    Width: =400
+                    X: =1
+                    Y: =0
+                    ZIndex: =2
+
+                    DataCardKey41 As label:
+                        AutoHeight: =true
+                        BorderColor: =gblPLabel.BorderColor
+                        BorderStyle: =gblPLabel.BorderStyle
+                        BorderThickness: =gblPLabel.BorderThickness
+                        Color: =gblPLabel.Color
+                        Fill: =gblPLabel.Fill
+                        Font: =gblPLabel.Font
+                        FontWeight: =FontWeight.Bold
+                        Height: =gblPLabel.Height
+                        Size: =gblPLabel.Size
+                        Text: =Parent.DisplayName
+                        Width: =Parent.Width - 60
+                        Wrap: =false
+                        X: =gblPLabel.X
+                        Y: =10
+                        ZIndex: =1
+
+                    DataCardValue36 As text:
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        BorderStyle: =gblPInput.BorderStyle
+                        BorderThickness: =gblPInput.BorderThickness
+                        Color: =gblPInput.Color
+                        Default: =Parent.Default
+                        DelayOutput: =true
+                        DisplayMode: =Parent.DisplayMode
+                        Fill: =gblPInput.Fill
+                        FocusedBorderThickness: =gblPInput.FocusedBorderThickness
+                        Font: =gblPInput.Font
+                        FontWeight: =gblPInput.FontWeight
+                        Height: =gblPInput.Height
+                        HoverBorderColor: =gblPInput.HoverBorderColor
+                        HoverColor: =gblPInput.HoverColor
+                        HoverFill: =gblPInput.HoverFill
+                        MaxLength: =Parent.MaxLength
+                        PaddingLeft: =5
+                        PressedBorderColor: =gblPInput.PressedBorderColor
+                        PressedColor: =gblPInput.PressedColor
+                        PressedFill: =gblPInput.PressedFill
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Size: =gblPInput.Size
+                        Tooltip: =Parent.DisplayName
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardKey41.Y + DataCardKey41.Height + 5
+                        ZIndex: =2
+
+                    ErrorMessage42 As label:
+                        AutoHeight: =true
+                        Height: =10
+                        Live: =Live.Assertive
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Text: =Parent.Error
+                        Visible: =Parent.DisplayMode=DisplayMode.Edit
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardValue36.Y + DataCardValue36.Height
+                        ZIndex: =3
+
+                    StarVisible41 As label:
+                        Align: =Align.Center
+                        Height: =DataCardKey41.Height
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Wrap: =false
+                        Y: =DataCardKey41.Y
+                        ZIndex: =4
+
+                IssuingAgency_DataCard4 As typedDataCard.textualEditCard:
+                    BorderColor: =gblPCard.BorderColor
+                    BorderStyle: =gblPCard.BorderStyle
+                    BorderThickness: =gblPCard.BorderThickness
+                    DataField: ="IssuingAgency"
+                    Default: =ThisItem.IssuingAgency
+                    DisplayMode: =Parent.DisplayMode
+                    DisplayName: ="Issuing Agency"
+                    Fill: =RGBA(0, 0, 0, 0)
+                    Height: =gblPCard.Height
+                    MaxLength: =DataSourceInfo([@HSE], DataSourceInfo.MaxLength, "IssuingAgency")
+                    Required: =false
+                    Update: =DataCardValue37.Selected.Title
+                    Width: =400
+                    X: =0
+                    Y: =1
+                    ZIndex: =2
+
+                    DataCardKey42 As label:
+                        AutoHeight: =true
+                        BorderColor: =gblPLabel.BorderColor
+                        BorderStyle: =gblPLabel.BorderStyle
+                        BorderThickness: =gblPLabel.BorderThickness
+                        Color: =gblPLabel.Color
+                        Fill: =gblPLabel.Fill
+                        Font: =gblPLabel.Font
+                        FontWeight: =FontWeight.Bold
+                        Height: =gblPLabel.Height
+                        Size: =gblPLabel.Size
+                        Text: =Parent.DisplayName
+                        Width: =Parent.Width - 60
+                        Wrap: =false
+                        X: =gblPLabel.X
+                        Y: =10
+                        ZIndex: =1
+
+                    ErrorMessage43 As label:
+                        AutoHeight: =true
+                        Height: =10
+                        Live: =Live.Assertive
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Text: =Parent.Error
+                        Visible: =Parent.DisplayMode=DisplayMode.Edit
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardValue37.Y + DataCardValue37.Height
+                        ZIndex: =3
+
+                    StarVisible42 As label:
+                        Align: =Align.Center
+                        Height: =DataCardKey42.Height
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Wrap: =false
+                        Y: =DataCardKey42.Y
+                        ZIndex: =4
+
+                    DataCardValue37 As combobox:
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        BorderStyle: =gblPInput.BorderStyle
+                        BorderThickness: =gblPInput.BorderThickness
+                        ChevronBackground: =gblPInput.ChevronBackground
+                        ChevronFill: =gblPInput.ChevronFill
+                        ChevronHoverBackground: =gblPInput.ChevronHoverBackground
+                        ChevronHoverFill: =gblPInput.ChevronHoverFill
+                        Color: =gblPInput.Color
+                        DefaultSelectedItems: |-
+                            =If(
+                                FrmAddDoc.Mode <> FormMode.New,
+                                Table({Title: Parent.Default})
+                            )
+                        DisplayFields: =["Title"]
+                        Fill: =gblPInput.Fill
+                        FocusedBorderThickness: =gblPInput.FocusedBorderThickness
+                        Font: =gblPInput.Font
+                        FontWeight: =gblPInput.Font
+                        Height: =gblPInput.Height
+                        HoverBorderColor: =gblPInput.HoverBorderColor
+                        HoverColor: =gblPInput.HoverColor
+                        HoverFill: =gblPInput.HoverFill
+                        InputTextPlaceholder: ="Select Agency"
+                        IsSearchable: =false
+                        Items: =HSE_Agency
+                        PressedBorderColor: =gblPInput.PressedBorderColor
+                        PressedColor: =gblPInput.PressedColor
+                        PressedFill: =gblPInput.PressedFill
+                        SearchFields: =["Title"]
+                        SearchItems: =[]
+                        SelectionTagColor: =gblPInput.SelectionTagColor
+                        SelectionTagFill: =gblPInput.SelectionTagFill
+                        SelectMultiple: =false
+                        Size: =gblPInput.Size
+                        Width: =Parent.Width - 60
+                        X: =30  
+                        Y: =DataCardKey42.Y+DataCardKey42.Height+5
+                        ZIndex: =5
+
+                ResponsiblePerson_DataCard4 As typedDataCard.textualEditCard:
+                    BorderColor: =gblPCard.BorderColor
+                    BorderStyle: =gblPCard.BorderStyle
+                    BorderThickness: =gblPCard.BorderThickness
+                    DataField: ="ResponsiblePerson"
+                    Default: =ThisItem.ResponsiblePerson
+                    DisplayMode: =Parent.DisplayMode
+                    DisplayName: ="Responsible Person"
+                    Fill: =RGBA(0, 0, 0, 0)
+                    Height: =gblPCard.Height
+                    MaxLength: =DataSourceInfo([@HSE], DataSourceInfo.MaxLength, "ResponsiblePerson")
+                    Required: =false
+                    Update: =DataCardValue40.Selected.Title
+                    Width: =400
+                    X: =0
+                    Y: =2
+                    ZIndex: =2
+
+                    DataCardKey45 As label:
+                        AutoHeight: =true
+                        BorderColor: =gblPLabel.BorderColor
+                        BorderStyle: =gblPLabel.BorderStyle
+                        BorderThickness: =gblPLabel.BorderThickness
+                        Color: =gblPLabel.Color
+                        Fill: =gblPLabel.Fill
+                        Font: =gblPLabel.Font
+                        FontWeight: =FontWeight.Bold
+                        Height: =gblPLabel.Height
+                        Size: =gblPLabel.Size
+                        Text: =Parent.DisplayName
+                        Width: =Parent.Width - 60
+                        Wrap: =false
+                        X: =gblPLabel.X
+                        Y: =10
+                        ZIndex: =1
+
+                    ErrorMessage46 As label:
+                        AutoHeight: =true
+                        Height: =10
+                        Live: =Live.Assertive
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Text: =Parent.Error
+                        Visible: =Parent.DisplayMode=DisplayMode.Edit
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardValue40.Y + DataCardValue40.Height
+                        ZIndex: =3
+
+                    StarVisible45 As label:
+                        Align: =Align.Center
+                        Height: =DataCardKey45.Height
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Wrap: =false
+                        Y: =DataCardKey45.Y
+                        ZIndex: =4
+
+                    DataCardValue40 As combobox:
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        BorderStyle: =gblPInput.BorderStyle
+                        BorderThickness: =gblPInput.BorderThickness
+                        ChevronBackground: =gblPInput.ChevronBackground
+                        ChevronFill: =gblPInput.ChevronFill
+                        ChevronHoverBackground: =gblPInput.ChevronHoverBackground
+                        ChevronHoverFill: =gblPInput.ChevronHoverFill
+                        Color: =gblPInput.Color
+                        DefaultSelectedItems: |-
+                            =If(
+                                FrmAddDoc.Mode = FormMode.New,
+                                Filter(
+                                    HSE_Emails,
+                                    Email = gblUserEmail
+                                ),
+                                Filter(
+                                    HSE_Emails,
+                                    Title = Parent.Default
+                                )
+                            )
+                        DisplayFields: =["Title"]
+                        Fill: =gblPInput.Fill
+                        FocusedBorderThickness: =gblPInput.FocusedBorderThickness
+                        Font: =gblPInput.Font
+                        FontWeight: =gblPInput.Font
+                        Height: =gblPInput.Height
+                        HoverBorderColor: =gblPInput.HoverBorderColor
+                        HoverColor: =gblPInput.HoverColor
+                        HoverFill: =gblPInput.HoverFill
+                        InputTextPlaceholder: ="Search Person"
+                        Items: =SortByColumns(HSE_Emails, "Title", SortOrder.Ascending)
+                        PressedBorderColor: =gblPInput.PressedBorderColor
+                        PressedColor: =gblPInput.PressedColor
+                        PressedFill: =gblPInput.PressedFill
+                        SearchFields: =["Title"]
+                        SearchItems: =Search(SortByColumns(HSE_Emails, "Title", SortOrder.Ascending),DataCardValue40.SearchText,"Title")
+                        SelectionTagColor: =gblPInput.SelectionTagColor
+                        SelectionTagFill: =gblPInput.SelectionTagFill
+                        SelectMultiple: =false
+                        Size: =gblPInput.Size
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardKey45.Y+DataCardKey45.Height+5
+                        ZIndex: =5
+
+                DateIssued_DataCard4 As typedDataCard.dateEditCard:
+                    BorderColor: =gblPCard.BorderColor
+                    BorderStyle: =gblPCard.BorderStyle
+                    BorderThickness: =gblPCard.BorderThickness
+                    DataField: ="DateIssued"
+                    Default: =ThisItem.DateIssued
+                    DisplayMode: =Parent.DisplayMode
+                    DisplayName: ="Date Issued"
+                    Fill: =RGBA(0, 0, 0, 0)
+                    Height: =gblPCard.Height
+                    Required: =false
+                    Update: =DataCardValue38.SelectedDate
+                    Width: =400
+                    X: =1
+                    Y: =2
+                    ZIndex: =2
+
+                    DataCardKey43 As label:
+                        AutoHeight: =true
+                        BorderColor: =gblPLabel.BorderColor
+                        BorderStyle: =gblPLabel.BorderStyle
+                        BorderThickness: =gblPLabel.BorderThickness
+                        Color: =gblPLabel.Color
+                        Fill: =gblPLabel.Fill
+                        Font: =gblPLabel.Font
+                        FontWeight: =FontWeight.Bold
+                        Height: =gblPLabel.Height
+                        Size: =gblPLabel.Size
+                        Text: =Parent.DisplayName
+                        Width: =Parent.Width - 60
+                        Wrap: =false
+                        X: =gblPLabel.X
+                        Y: =10
+                        ZIndex: =1
+
+                    DataCardValue38 As datepicker:
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        BorderStyle: =gblPInput.BorderStyle
+                        BorderThickness: =gblPInput.BorderThickness
+                        Color: =gblPInput.Color
+                        DefaultDate: =Parent.Default
+                        DisplayMode: =Parent.DisplayMode
+                        EndYear: =Year(Today())+100
+                        Fill: =gblPInput.Fill
+                        FocusedBorderThickness: =gblPInput.FocusedBorderThickness
+                        Font: =gblPInput.Font
+                        FontWeight: =gblPInput.FontWeight
+                        Height: =gblPInput.Height
+                        HoverBorderColor: =gblPInput.HoverBorderColor
+                        HoverFill: =gblPInput.HoverFill
+                        InputTextPlaceholder: =If(IsBlank(Self.SelectedDate), Text(Now(), Self.Format, Self.Language))
+                        IsEditable: =true
+                        PaddingBottom: =0
+                        PaddingLeft: =If(Self.DisplayMode = DisplayMode.Edit, 5, 0)
+                        PressedBorderColor: =gblPInput.PressedBorderColor
+                        PressedFill: =gblPInput.PressedFill
+                        Size: =gblPInput.Size
+                        StartYear: =1899
+                        Tooltip: =Parent.DisplayName
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardKey43.Y + DataCardKey43.Height + 5
+                        ZIndex: =2
+
+                    ErrorMessage44 As label:
+                        AutoHeight: =true
+                        Height: =10
+                        Live: =Live.Assertive
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Text: =Parent.Error
+                        Visible: =Parent.DisplayMode=DisplayMode.Edit
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardValue38.Y + DataCardValue38.Height
+                        ZIndex: =3
+
+                    StarVisible43 As label:
+                        Align: =Align.Center
+                        Height: =DataCardKey43.Height
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Wrap: =false
+                        Y: =DataCardKey43.Y
+                        ZIndex: =4
+
+                DateExpiring_DataCard4 As typedDataCard.dateEditCard:
+                    BorderColor: =gblPCard.BorderColor
+                    BorderStyle: =gblPCard.BorderStyle
+                    BorderThickness: =gblPCard.BorderThickness
+                    DataField: ="DateExpiring"
+                    Default: =ThisItem.DateExpiring
+                    DisplayMode: =Parent.DisplayMode
+                    DisplayName: ="Date Expire"
+                    Fill: =RGBA(0, 0, 0, 0)
+                    Height: =gblPCard.Height
+                    Required: =false
+                    Update: =DataCardValue39.SelectedDate
+                    Width: =400
+                    X: =0
+                    Y: =3
+                    ZIndex: =2
+
+                    DataCardKey44 As label:
+                        AutoHeight: =true
+                        BorderColor: =gblPLabel.BorderColor
+                        BorderStyle: =gblPLabel.BorderStyle
+                        BorderThickness: =gblPLabel.BorderThickness
+                        Color: =gblPLabel.Color
+                        Fill: =gblPLabel.Fill
+                        Font: =gblPLabel.Font
+                        FontWeight: =FontWeight.Bold
+                        Height: =gblPLabel.Height
+                        Size: =gblPLabel.Size
+                        Text: =Parent.DisplayName
+                        Width: =Parent.Width - 60
+                        Wrap: =false
+                        X: =gblPLabel.X
+                        Y: =10
+                        ZIndex: =1
+
+                    DataCardValue39 As datepicker:
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        BorderStyle: =gblPInput.BorderStyle
+                        BorderThickness: =gblPInput.BorderThickness
+                        Color: =gblPInput.Color
+                        DefaultDate: =Parent.Default
+                        DisplayMode: =Parent.DisplayMode
+                        EndYear: =Year(Today())+100
+                        Fill: =gblPInput.Fill
+                        FocusedBorderThickness: =gblPInput.FocusedBorderThickness
+                        Font: =gblPInput.Font
+                        FontWeight: =gblPInput.FontWeight
+                        Height: =gblPInput.Height
+                        HoverBorderColor: =gblPInput.HoverBorderColor
+                        HoverFill: =gblPInput.HoverFill
+                        InputTextPlaceholder: =If(IsBlank(Self.SelectedDate), Text(Now(), Self.Format, Self.Language))
+                        IsEditable: =true
+                        PaddingBottom: =0
+                        PaddingLeft: =If(Self.DisplayMode = DisplayMode.Edit, 5, 0)
+                        PressedBorderColor: =gblPInput.PressedBorderColor
+                        PressedFill: =gblPInput.PressedFill
+                        Size: =gblPInput.Size
+                        StartYear: =1899
+                        Tooltip: =Parent.DisplayName
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardKey44.Y + DataCardKey44.Height + 5
+                        ZIndex: =2
+
+                    ErrorMessage45 As label:
+                        AutoHeight: =true
+                        Height: =10
+                        Live: =Live.Assertive
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Text: =Parent.Error
+                        Visible: =Parent.DisplayMode=DisplayMode.Edit
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardValue39.Y + DataCardValue39.Height
+                        ZIndex: =3
+
+                    StarVisible44 As label:
+                        Align: =Align.Center
+                        Height: =DataCardKey44.Height
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Wrap: =false
+                        Y: =DataCardKey44.Y
+                        ZIndex: =4
+
+                DocumentCategory_DataCard3 As typedDataCard.textualEditCard:
+                    BorderColor: =gblPCard.BorderColor
+                    BorderStyle: =gblPCard.BorderStyle
+                    BorderThickness: =gblPCard.BorderThickness
+                    DataField: ="DocumentCategory"
+                    Default: =ThisItem.DocumentCategory
+                    DisplayMode: =Parent.DisplayMode
+                    DisplayName: ="Document Category"
+                    Fill: =RGBA(0, 0, 0, 0)
+                    Height: =gblPCard.Height
+                    MaxLength: =DataSourceInfo([@HSE], DataSourceInfo.MaxLength, "DocumentCategory")
+                    Required: =false
+                    Update: =DataCardValue48.Selected.Title
+                    Width: =400
+                    X: =1
+                    Y: =3
+                    ZIndex: =2
+
+                    DataCardKey53 As label:
+                        AutoHeight: =true
+                        BorderColor: =gblPLabel.BorderColor
+                        BorderStyle: =gblPLabel.BorderStyle
+                        BorderThickness: =gblPLabel.BorderThickness
+                        Color: =gblPLabel.Color
+                        Fill: =gblPLabel.Fill
+                        Font: =gblPLabel.Font
+                        FontWeight: =FontWeight.Bold
+                        Height: =gblPLabel.Height
+                        Size: =gblPLabel.Size
+                        Text: =Parent.DisplayName
+                        Width: =Parent.Width - 60
+                        Wrap: =false
+                        X: =gblPLabel.X
+                        Y: =10
+                        ZIndex: =1
+
+                    ErrorMessage54 As label:
+                        AutoHeight: =true
+                        Height: =10
+                        Live: =Live.Assertive
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Text: =Parent.Error
+                        Visible: =Parent.DisplayMode=DisplayMode.Edit
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardValue48.Y + DataCardValue48.Height
+                        ZIndex: =3
+
+                    StarVisible53 As label:
+                        Align: =Align.Center
+                        Height: =DataCardKey53.Height
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Wrap: =false
+                        Y: =DataCardKey53.Y
+                        ZIndex: =4
+
+                    DataCardValue48 As combobox:
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        BorderStyle: =gblPInput.BorderStyle
+                        BorderThickness: =gblPInput.BorderThickness
+                        ChevronBackground: =gblPInput.ChevronBackground
+                        ChevronFill: =gblPInput.ChevronFill
+                        ChevronHoverBackground: =gblPInput.ChevronHoverBackground
+                        ChevronHoverFill: =gblPInput.ChevronHoverFill
+                        Color: =gblPInput.Color
+                        DefaultSelectedItems: |-
+                            =If(
+                                FrmAddDoc.Mode <> FormMode.New,
+                                Table({Title: Parent.Default})
+                            )
+                        DisplayFields: =["Title"]
+                        Fill: =gblPInput.Fill
+                        FocusedBorderThickness: =gblPInput.FocusedBorderThickness
+                        Font: =gblPInput.Font
+                        FontWeight: =gblPInput.Font
+                        Height: =gblPInput.Height
+                        HoverBorderColor: =gblPInput.HoverBorderColor
+                        HoverColor: =gblPInput.HoverColor
+                        HoverFill: =gblPInput.HoverFill
+                        InputTextPlaceholder: ="Select Agency"
+                        IsSearchable: =false
+                        Items: =SortByColumns(HSE_Doc_Category,"Title",SortOrder.Ascending)
+                        PressedBorderColor: =gblPInput.PressedBorderColor
+                        PressedColor: =gblPInput.PressedColor
+                        PressedFill: =gblPInput.PressedFill
+                        SearchFields: =["Title"]
+                        SearchItems: =[]
+                        SelectionTagColor: =gblPInput.SelectionTagColor
+                        SelectionTagFill: =gblPInput.SelectionTagFill
+                        SelectMultiple: =false
+                        Size: =gblPInput.Size
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardKey53.Y+DataCardKey53.Height+5
+                        ZIndex: =5
+
+                plant_DataCard3 As typedDataCard.textualEditCard:
+                    BorderColor: =gblPCard.BorderColor
+                    BorderStyle: =gblPCard.BorderStyle
+                    BorderThickness: =gblPCard.BorderThickness
+                    DataField: ="plant"
+                    Default: =ThisItem.plant
+                    DisplayMode: =Parent.DisplayMode
+                    DisplayName: ="Folder"
+                    Fill: =RGBA(0, 0, 0, 0)
+                    Height: =gblPCard.Height
+                    MaxLength: =DataSourceInfo([@HSE], DataSourceInfo.MaxLength, "plant")
+                    Required: =false
+                    Update: =DataCardValue46.Selected.Title
+                    Width: =400
+                    X: =1
+                    Y: =4
+                    ZIndex: =2
+
+                    DataCardKey51 As label:
+                        AutoHeight: =true
+                        BorderColor: =gblPLabel.BorderColor
+                        BorderStyle: =gblPLabel.BorderStyle
+                        BorderThickness: =gblPLabel.BorderThickness
+                        Color: =gblPLabel.Color
+                        Fill: =gblPLabel.Fill
+                        Font: =gblPLabel.Font
+                        FontWeight: =FontWeight.Bold
+                        Height: =gblPLabel.Height
+                        Size: =gblPLabel.Size
+                        Text: =Parent.DisplayName
+                        Width: =Parent.Width - 60
+                        Wrap: =false
+                        X: =gblPLabel.X
+                        Y: =10
+                        ZIndex: =1
+
+                    ErrorMessage52 As label:
+                        AutoHeight: =true
+                        Height: =10
+                        Live: =Live.Assertive
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Text: =Parent.Error
+                        Visible: =Parent.DisplayMode=DisplayMode.Edit
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardValue46.Y + DataCardValue46.Height
+                        ZIndex: =3
+
+                    StarVisible51 As label:
+                        Align: =Align.Center
+                        Height: =DataCardKey51.Height
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Wrap: =false
+                        Y: =DataCardKey51.Y
+                        ZIndex: =4
+
+                    DataCardValue46 As combobox:
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        BorderStyle: =gblPInput.BorderStyle
+                        BorderThickness: =gblPInput.BorderThickness
+                        ChevronBackground: =gblPInput.ChevronBackground
+                        ChevronFill: =gblPInput.ChevronFill
+                        ChevronHoverBackground: =gblPInput.ChevronHoverBackground
+                        ChevronHoverFill: =gblPInput.ChevronHoverFill
+                        Color: =gblPInput.Color
+                        DefaultSelectedItems: |-
+                            =If(
+                                FrmAddDoc.Mode = FormMode.New,
+                                If(
+                                    gblSubFolder = Blank(),
+                                    Filter(
+                                        HSE_Locations,
+                                        Title = gblUserInfo.Plant
+                                    ),
+                                    Filter(
+                                        HSE_Locations,
+                                        Title = gblSubFolder
+                                    )
+                                ),
+                                Filter(
+                                    HSE_Locations,
+                                    Title = Parent.Default
+                                )
+                            )
+                        DisplayFields: =["Title"]
+                        DisplayMode: =If(gblUserInfo.Role="Admin", DisplayMode.Edit, DisplayMode.View)
+                        Fill: =gblPInput.Fill
+                        FocusedBorderThickness: =gblPInput.FocusedBorderThickness
+                        Font: =gblPInput.Font
+                        FontWeight: =gblPInput.Font
+                        Height: =gblPInput.Height
+                        HoverBorderColor: =gblPInput.HoverBorderColor
+                        HoverColor: =gblPInput.HoverColor
+                        HoverFill: =gblPInput.HoverFill
+                        InputTextPlaceholder: ="Search Location"
+                        Items: |-
+                            =If(
+                                gblUserInfo.Role = "Admin",
+                                SortByColumns(
+                                    HSE_Locations,
+                                    "Title",
+                                    SortOrder.Ascending
+                                ),
+                                SortByColumns(
+                                    Filter(
+                                        HSE_Locations,
+                                        Group = gblUserInfo.Grouping
+                                    ),
+                                    "Title",
+                                    SortOrder.Ascending
+                                )
+                            )
+                        PressedBorderColor: =gblPInput.PressedBorderColor
+                        PressedColor: =gblPInput.PressedColor
+                        PressedFill: =gblPInput.PressedFill
+                        SearchFields: =["Title"]
+                        SearchItems: |-
+                            =Search(If(
+                                gblUserInfo.Role = "Admin",
+                                SortByColumns(
+                                    HSE_Locations,
+                                    "Title",
+                                    SortOrder.Ascending
+                                ),
+                                SortByColumns(
+                                    Filter(
+                                        HSE_Locations,
+                                        Group = gblUserInfo.Grouping
+                                    ),
+                                    "Title",
+                                    SortOrder.Ascending
+                                )
+                            ),DataCardValue46.SearchText,"Title")
+                        SelectionTagColor: =gblPInput.SelectionTagColor
+                        SelectionTagFill: =gblPInput.SelectionTagFill
+                        SelectMultiple: =false
+                        Size: =gblPInput.Size
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardKey51.Y+DataCardKey51.Height+5
+                        ZIndex: =5
+
+                ShareToAllPlant_DataCard3 As typedDataCard.textualEditCard:
+                    BorderColor: =gblPCard.BorderColor
+                    BorderStyle: =gblPCard.BorderStyle
+                    BorderThickness: =gblPCard.BorderThickness
+                    DataField: ="ShareToAllPlant"
+                    Default: =ThisItem.ShareToAllPlant
+                    DisplayMode: =Parent.DisplayMode
+                    DisplayName: ="Share To All Plant/Store"
+                    Fill: =RGBA(0, 0, 0, 0)
+                    Height: =gblPCard.Height
+                    MaxLength: =DataSourceInfo([@HSE], DataSourceInfo.MaxLength, "ShareToAllPlant")
+                    Required: =false
+                    Update: =Proper(DataCardValue49.Value)
+                    Visible: =false
+                    Width: =400
+                    X: =0
+                    Y: =7
+                    ZIndex: =2
+
+                    DataCardKey54 As label:
+                        AutoHeight: =true
+                        BorderColor: =gblPLabel.BorderColor
+                        BorderStyle: =gblPLabel.BorderStyle
+                        BorderThickness: =gblPLabel.BorderThickness
+                        Color: =gblPLabel.Color
+                        Fill: =gblPLabel.Fill
+                        Font: =gblPLabel.Font
+                        FontWeight: =FontWeight.Bold
+                        Height: =gblPLabel.Height
+                        Size: =gblPLabel.Size
+                        Text: =Parent.DisplayName
+                        Width: =Parent.Width - 60
+                        Wrap: =false
+                        X: =gblPLabel.X
+                        Y: =10
+                        ZIndex: =1
+
+                    ErrorMessage55 As label:
+                        AutoHeight: =true
+                        Height: =10
+                        Live: =Live.Assertive
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Text: =Parent.Error
+                        Visible: =Parent.DisplayMode=DisplayMode.Edit
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardValue49.Y + DataCardValue49.Height
+                        ZIndex: =3
+
+                    StarVisible54 As label:
+                        Align: =Align.Center
+                        Height: =DataCardKey54.Height
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Wrap: =false
+                        Y: =DataCardKey54.Y
+                        ZIndex: =4
+
+                    DataCardValue49 As toggleSwitch:
+                        Default: =!IsBlank(DataCardValue4.Selected.Value) && !IsEmpty(DataCardValue4.Selected.Value)
+                        FalseFill: =RGBA(255, 0, 0, 1)
+                        FalseText: ="No"
+                        Height: =20
+                        TrueFill: =RGBA(54, 176, 75, 1)
+                        TrueText: ="Yes"
+                        Width: =94
+                        X: =40
+                        Y: =40
+                        ZIndex: =5
+
+                Email_DataCard4 As typedDataCard.textualEditCard:
+                    BorderStyle: =BorderStyle.Solid
+                    DataField: ="Email"
+                    Default: =ThisItem.Email
+                    DisplayMode: =Parent.DisplayMode
+                    DisplayName: ="Email"
+                    Fill: =RGBA(0, 0, 0, 0)
+                    Height: =50
+                    MaxLength: =DataSourceInfo([@HSE], DataSourceInfo.MaxLength, "Email")
+                    Required: =false
+                    Update: =DataCardValue42.Text
+                    Visible: =false
+                    Width: =400
+                    X: =1
+                    Y: =7
+                    ZIndex: =2
+
+                    DataCardKey47 As label:
+                        AutoHeight: =true
+                        BorderColor: =gblPLabel.BorderColor
+                        BorderStyle: =gblPLabel.BorderStyle
+                        BorderThickness: =gblPLabel.BorderThickness
+                        Color: =gblPLabel.Color
+                        Fill: =gblPLabel.Fill
+                        Font: =gblPLabel.Font
+                        FontWeight: =FontWeight.Bold
+                        Height: =gblPLabel.Height
+                        Size: =gblPLabel.Size
+                        Text: =Parent.DisplayName
+                        Width: =Parent.Width - 60
+                        Wrap: =false
+                        X: =gblPLabel.X
+                        Y: =10
+                        ZIndex: =1
+
+                    DataCardValue42 As text:
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        BorderStyle: =gblPInput.BorderStyle
+                        BorderThickness: =gblPInput.BorderThickness
+                        Color: =gblPInput.Color
+                        Default: |-
+                            =Concatenate(
+                                If(
+                                    gblUserEmail <> DataCardValue40.Selected.Email,
+                                    DataCardValue40.Selected.Email & ";",
+                                    ""
+                                ),
+                                Concat(
+                                    DataCardValue51.SelectedItems,
+                                    Email,
+                                    ";"
+                                )
+                            )
+                        DelayOutput: =true
+                        DisplayMode: =Parent.DisplayMode
+                        Fill: =gblPInput.Fill
+                        FocusedBorderThickness: =gblPInput.FocusedBorderThickness
+                        Font: =gblPInput.Font
+                        FontWeight: =gblPInput.FontWeight
+                        Height: =gblPInput.Height
+                        HoverBorderColor: =gblPInput.HoverBorderColor
+                        HoverColor: =gblPInput.HoverColor
+                        HoverFill: =gblPInput.HoverFill
+                        MaxLength: =Parent.MaxLength
+                        PaddingLeft: =5
+                        PressedBorderColor: =gblPInput.PressedBorderColor
+                        PressedColor: =gblPInput.PressedColor
+                        PressedFill: =gblPInput.PressedFill
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Size: =gblPInput.Size
+                        Tooltip: =Parent.DisplayName
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardKey47.Y + DataCardKey47.Height + 5
+                        ZIndex: =2
+
+                    ErrorMessage48 As label:
+                        AutoHeight: =true
+                        Height: =10
+                        Live: =Live.Assertive
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Text: =Parent.Error
+                        Visible: =Parent.DisplayMode=DisplayMode.Edit
+                        Width: =Parent.Width - 60
+                        X: =30
+                        Y: =DataCardValue42.Y + DataCardValue42.Height
+                        ZIndex: =3
+
+                    StarVisible47 As label:
+                        Align: =Align.Center
+                        Height: =DataCardKey47.Height
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Wrap: =false
+                        Y: =DataCardKey47.Y
+                        ZIndex: =4
+
+    CmpntHeader_2 As CmpntHeader:
+        BackNavigation: =ScrnV2View
+        HeaderText: |-
+            =If(
+                lclEditPressed,
+                "Edit Document: " & gblHSEDoc.Title,
+                "New Document"
+            )
+        Width: =Parent.Width
+        ZIndex: =4
+
+    CmpntLoading_1 As CmpntLoading:
+        Height: =Parent.Height
+        Visible: =lclShowLoading
+        Width: =Parent.Width
+        ZIndex: =5
+
